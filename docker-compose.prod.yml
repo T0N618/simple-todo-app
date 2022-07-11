@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    networks:
+      - backend
+    volumes:
+      - mongo_db:/data/db
+  api:
+    depends_on:
+      - mongo
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    # ports:
+    #   - 5000:5000
+    networks:
+      - backend
+      - frontend
+    volumes:
+      - ./:/backend
+      - /home/backend/node_modules
+  ui:
+    depends_on:
+      - api
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    ports:
+      - 80:8000
+    networks:
+      - frontend
+    volumes:
+      - ./:/frontend
+      - /home/frontend/node_modules
+networks:
+  backend:
+  frontend:
+volumes:
+  mongo_db:

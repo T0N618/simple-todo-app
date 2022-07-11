@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  frontend-react:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: frontend-react
+    networks:
+      - proxy-net
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/home/frontend
+      - /home/frontend/node_modules
+volumes:
+networks:
+  proxy-net:
+    external: true
+    name: proxy-net

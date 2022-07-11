@@ -1,0 +1,7 @@
+.git
+.vscode
+Dockerfile.dev
+docker-compose.dev.yml
+README.md
+
+dist

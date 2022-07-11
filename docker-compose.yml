@@ -1,0 +1,55 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo
+    networks:
+      - proxy-net
+    container_name: mongo
+    restart: always
+    ports:
+      - 27017:27017
+  app:
+    container_name: app
+    networks:
+      - proxy-net
+    restart: always
+    build: .
+    env_file:
+      - .shit
+    ports:
+      - 5000:5000
+    external_links:
+      - mongo
+    depends_on:
+      - mongo
+networks:
+  proxy-net:
+    name: proxy-net
+# version: "3.8"
+# services:
+#   myapp:
+#     build:
+#       context: .
+#     container_name: myapp
+#     environment:
+#       - ENVIRONMENT=dockerlocal
+#       - PORT=9999
+#       - PRODUCTION.DATABASE.DRIVERNAME=pgx
+#       - PRODUCTION.DATABASE.DATABASEURL=postgres://fullstack-go-angular:fullstack-go-angular@db:5432/fullstack-go-angular
+#     ports:
+#       - 9999:9999
+#     depends_on:
+#       - db
+#     restart: always
+#   db:
+#     image: postgres
+#     # ports:
+#       # - 5433:5432
+#     environment:
+#       - POSTGRES_USER=fullstack-go-angular
+#       - POSTGRES_PASSWORD=fullstack-go-angular
+#       - POSTGRES_DB=fullstack-go-angular
+#     volumes:
+#       - database_postgres:/var/lib/postgresql/data
+# volumes:
+#   database_postgres:

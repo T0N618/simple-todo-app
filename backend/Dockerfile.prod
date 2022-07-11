@@ -1,0 +1,7 @@
+FROM node:17-alpine
+WORKDIR /backend
+COPY package.json .
+COPY yarn.lock .
+RUN yarn install --production=true
+COPY . .
+CMD ["node"]

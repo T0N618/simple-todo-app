@@ -1,0 +1,364 @@
+openapi: 3.0.0
+info:
+  title: Todo App API
+  description: |
+    Simple todo app with user authentication <br />
+    Get reset email at <a href="https://ethereal.email" target="_blank">https://ethereal.email</a><br />
+    <strong>Email Address:</strong> keely.bashirian40@ethereal.email <br />
+    <strong>Password:</strong> QpvVfrmBn8v3d7YQEW
+
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:{port}/{basePath}
+    variables:
+      basePath:
+        default: api/v1
+      port:
+        default: 5000
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Auth API
+  - name: User
+    description: User managing API
+  - name: Task
+    description: Task managing API
+
+paths:
+  /register:
+    post:
+      tags:
+        - Auth
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/requests/RegisterUserInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/TokenRes'
+        '400':
+          description: 'Missing fields'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Missing fields'
+        '409':
+          description: 'Email is duplicated'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Email is duplicated'
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/requests/LoginUserInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenRes'
+  /refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenRes'
+  /logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logout operation successful
+          headers:
+            Set-Cookie:
+              description: Clear jwt cookie
+              schema:
+                type: string
+                example: 'Example: jwt=; Path=/; Expires=Tue, 16 Jun 2020 09:14:17 GMT; HttpOnly'
+  /reset-password:
+    post:
+      tags:
+        - Auth
+      summary: Reset password
+      parameters:
+        - in: query
+          name: token
+          description: Reset token from email
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+  /forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Forgot password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: luna@mail.com
+
+  /tasks:
+    get:
+      tags:
+        - Task
+      summary: Return the list of all tasks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      tags:
+        - Task
+      summary: Create new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/requests/CreateAndUpdateTaskInput'
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /tasks/{id}:
+    get:
+      tags:
+        - Task
+      summary: Get task by id
+      parameters:
+        - in: path
+          name: id
+          description: Task id
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    patch:
+      tags:
+        - Task
+      summary: Update task by id
+      parameters:
+        - in: path
+          name: id
+          description: Task id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/requests/CreateAndUpdateTaskInput'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    delete:
+      tags:
+        - Task
+      summary: Delete task by id
+      parameters:
+        - in: path
+          name: id
+          description: Task id
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Success
+
+  /users:
+    get:
+      tags:
+        - User
+      summary: Get list of all users
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    delete:
+      tags:
+        - User
+      summary: Delete all users
+      responses:
+        '204':
+          description: Success
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    TokenRes:
+      description: JWT accessToken and refreshToken cookie
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              accessToken:
+                type: string
+                example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MmM4ZmZjYzc4Yjk0NWE1N2ExYWExZWQiLCJpYXQiOjE2NTczNDcwNzYsImV4cCI6MTY1NzM1MDY3Nn0.mCWhbOcEUDnfoTxyvDiUUKkqTp3x-JdAgDskNZD1cbo'
+      headers:
+        Set-Cookie:
+          description: refreshToken
+          schema:
+            type: string
+            example: 'Example: jwt=51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550; Path=/; Expires=Tue, 16 Jun 2020 09:14:17 GMT; HttpOnly'
+  requests:
+    RegisterUserInput:
+      type: object
+      properties:
+        username:
+          type: string
+          example: Luna Lovelace
+        email:
+          type: string
+          example: luna@mail.com
+        password:
+          type: string
+          example: 123456
+    LoginUserInput:
+      type: object
+      properties:
+        email:
+          type: string
+          example: luna@mail.com
+        password:
+          type: string
+          example: 123456
+    CreateAndUpdateTaskInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Moring workout
+        description:
+          type: string
+          example: 30 mins running, 100 pushs-up, 50 pulls-up
+        status:
+          type: string
+          example: todo
+  schemas:
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 62c937600f5136cbd98d9cfe
+        title:
+          type: string
+          example: Morning Workout
+        description:
+          type: string
+          example: 30 mins running, 100 pushs-up, 50 pulls-up
+        status:
+          type: string
+          example: todo
+        userId:
+          type: string
+          example: 62c8ffcc78b945a57a1aa1ed
+        createdAt:
+          type: string
+          example: '2022-07-09T08:08:00.068Z'
+        updatedAt:
+          type: string
+          example: '2022-07-09T08:08:00.068Z'
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 62c937600f5136cbd98d9cfe
+        email:
+          type: string
+          example: luna@mail.com
+        password:
+          type: string
+          example: 123456
+        username:
+          type: string
+          example: Luna Lovelace
+        role:
+          type: string
+          example: user
+        refreshToken:
+          type: string
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MmM4ZmZjYzc4Yjk0NWE1N2ExYWExZWQiLCJpYXQiOjE2NTczNDcwNzYsImV4cCI6MTY1NzM1MDY3Nn0.mCWhbOcEUDnfoTxyvDiUUKkqTp3x-JdAgDskNZD1cbo'
+        createdAt:
+          type: date
+          example: '2022-07-09T08:08:00.068Z'
+        udpateAt:
+          type: date
+          example: '2022-07-09T08:08:00.068Z'
